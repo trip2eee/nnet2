@@ -10,10 +10,10 @@ class Dataset:
         self.y = None
     
     def __getitem__(self, index):
-        return self.x[index], self.y[index]
+        raise NotImplementedError
         
     def __len__(self):
-        return len(self.x)
+        raise NotImplementedError
     
 class Spiral(Dataset):
     def __init__(self, train=True, transform=None, target_transform=None):
@@ -31,11 +31,12 @@ class Spiral(Dataset):
             self.target_transform = lambda x: x
     
     def __getitem__(self, index):
-        
         x = self.transform(self.x[index])
         y = self.target_transform(self.y[index])
-
         return x, y
+
+    def __len__(self):
+        return len(self.x)
 
     def get_spiral(self, train=True):
         seed = 1984 if train else 2020
@@ -67,13 +68,11 @@ class Spiral(Dataset):
 # =============================================================================
 class MNIST(Dataset):
 
-    def __init__(self, train=True,
-                 transform=Compose([Flatten(), ToFloat(),
-                                     Normalize(0., 255.)]),
-                 target_transform=None):
-        super().__init__(train, transform, target_transform)
+    def __init__(self, train=True, transform=None):
+        super(MNIST, self).__init__()
+        self.train = train
+        self.transform = transform
 
-    def prepare(self):
         url = 'http://yann.lecun.com/exdb/mnist/'
         train_files = {'target': 'train-images-idx3-ubyte.gz',
                        'label': 'train-labels-idx1-ubyte.gz'}
@@ -84,8 +83,9 @@ class MNIST(Dataset):
         data_path = get_file(url + files['target'])
         label_path = get_file(url + files['label'])
 
-        self.data = self._load_data(data_path)
-        self.label = self._load_label(label_path)
+        self.x = self._load_data(data_path)
+        self.x = self.x.astype(np.float32) / 255.0
+        self.y = self._load_label(label_path)
 
     def _load_label(self, filepath):
         with gzip.open(filepath, 'rb') as f:
@@ -98,13 +98,24 @@ class MNIST(Dataset):
         data = data.reshape(-1, 1, 28, 28)
         return data
 
+    def __getitem__(self, index):
+        x = self.x[index]
+        if self.transform is not None:
+            x = self.transfrom(x)
+
+        y = self.y[index]
+        return x, y
+
+    def __len__(self):
+        return len(self.x)
+
     def show(self, row=10, col=10):
         H, W = 28, 28
         img = np.zeros((H * row, W * col))
         for r in range(row):
             for c in range(col):
-                img[r * H:(r + 1) * H, c * W:(c + 1) * W] = self.data[
-                    np.random.randint(0, len(self.data) - 1)].reshape(H, W)
+                img[r * H:(r + 1) * H, c * W:(c + 1) * W] = self.x[
+                    np.random.randint(0, len(self.x) - 1)].reshape(H, W)
         plt.imshow(img, cmap='gray', interpolation='nearest')
         plt.axis('off')
         plt.show()
