@@ -19,6 +19,8 @@ def get_array_module(x):
     return xp
 
 def as_numpy(x):
+    """This function converts cupy.ndarray into numpy.ndarray.    
+    """
     if isinstance(x, Tensor):
         x = x.data
     
@@ -26,6 +28,7 @@ def as_numpy(x):
         return np.array(x)
     elif isinstance(x, np.ndarray):
         return x
+    return cp.asnumpy(x)
     
 def as_cupy(x):
     if isinstance(x, Tensor):
