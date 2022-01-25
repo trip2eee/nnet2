@@ -1,5 +1,6 @@
 from nnet.optim.optimizer import Optimizer
 import numpy as np
+import nnet.cuda
 
 class SGD(Optimizer):
     def __init__(self, lr=0.01, momentum=0.0):
@@ -9,10 +10,11 @@ class SGD(Optimizer):
         self.vs = {}
 
     def update_one(self, param):
-        
+        xp = nnet.cuda.get_array_module(param.data)
+
         v_key = id(param)
         if v_key not in self.vs:
-            self.vs[v_key] = np.zeros_like(param.data)
+            self.vs[v_key] = xp.zeros_like(param.data)
 
         v = self.vs[v_key]
         v *= self.momentum

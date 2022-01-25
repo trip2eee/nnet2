@@ -7,7 +7,7 @@ class Function:
         pass
 
     def parameters(self):
-        # getattr()?
+        # TODO: to check getattr()?
         raise NotImplementedError
 
     def __call__(self, *inputs):

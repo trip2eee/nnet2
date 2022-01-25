@@ -1,5 +1,6 @@
 import numpy as np
 from nnet.utils.data.transforms import *
+from nnet import Tensor
 import matplotlib.pyplot as plt
 import gzip
 from nnet.utils.utils import get_file, cache_dir
@@ -23,6 +24,9 @@ class Spiral(Dataset):
         self.x = x
         self.y = y
 
+        self.x = Tensor(self.x)
+        self.y = Tensor(self.y)
+        
         self.transform = transform
         self.target_transform = target_transform
         if self.transform is None:
@@ -86,6 +90,9 @@ class MNIST(Dataset):
         self.x = self._load_data(data_path)
         self.x = self.x.astype(np.float32) / 255.0
         self.y = self._load_label(label_path)
+
+        self.x = Tensor(self.x)
+        self.y = Tensor(self.y)
 
     def _load_label(self, filepath):
         with gzip.open(filepath, 'rb') as f:

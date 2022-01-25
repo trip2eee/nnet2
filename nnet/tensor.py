@@ -2,12 +2,19 @@ import numpy as np
 import nnet
 import nnet.config
 
+try:
+    import cupy
+    array_types = (np.ndarray, cupy.ndarray)
+except ImportError:
+    array_types = (np.ndarray)
+
+
 class Tensor:
     __array_priority__ = 200
 
     def __init__(self, data, name=None):
         if data is not None:
-            if isinstance(data, np.ndarray):
+            if isinstance(data, array_types):
                 self.data = data
             elif np.isscalar(data):
                 self.data = np.array(data)
@@ -35,7 +42,8 @@ class Tensor:
                                 The forward propagation of Module class is also called in computation of gradient in backward propagation of Tensor class.
         """
         if self.grad is None:
-            self.grad = Tensor(np.ones_like(self.data))
+            xp = nnet.cuda.get_array_module(self.data)
+            self.grad = Tensor(xp.ones_like(self.data))
 
         """
         Backward propagation
@@ -165,5 +173,18 @@ class Tensor:
     def sum(self, axis=None, keepdims=False):
         return nnet.sum(self, axis, keepdims)
 
+    def to_cpu(self):
+        if self.data is not None:
+            self.data = nnet.cuda.as_numpy(self.data)
+    
+    def to_gpu(self):
+        if self.data is not None:
+            self.data = nnet.cuda.as_cupy(self.data)
+    
+    def to(self, device):
+        if device == 'gpu':
+            self.to_gpu()
+        else:
+            self.to_cpu()
 
 

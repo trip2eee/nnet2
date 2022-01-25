@@ -1,7 +1,7 @@
 import nnet
 import os
 import subprocess
-import numpy as np
+import nnet.cuda
 import urllib.request
 
 def get_dot_graph(output, verbose=True):
@@ -119,12 +119,14 @@ def reshape_sum_backward(gy, x_shape, axis, keepdims):
     gy = gy.reshape(shape)  # reshape
     return gy
 
-def logsumexp(x, axis=1):
+def logsumexp(x, axis=1):    
+    xp = nnet.cuda.get_array_module(x)
+
     m = x.max(axis=axis, keepdims=True)
     y = x - m
-    np.exp(y, out=y)
+    xp.exp(y, out=y)
     s = y.sum(axis=axis, keepdims=True)
-    np.log(s, out=s)
+    xp.log(s, out=s)
     m += s
     return m
 

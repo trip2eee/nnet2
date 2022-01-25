@@ -1,7 +1,9 @@
+from cv2 import cuda_BufferPool
 import numpy as np
+import nnet.cuda
 
 class DataLoader:
-    def __init__(self, dataset, batch_size=1, shuffle=True):
+    def __init__(self, dataset, batch_size=1, shuffle=True, gpu=False):
         self.dataset = dataset        
         self.shuffle = shuffle
         self.indices = np.arange(len(dataset))
@@ -12,9 +14,8 @@ class DataLoader:
             self.batch_size = batch_size
 
         self.idx_iter = 0
-        np.random.seed(123)
-
-
+        self.gpu = gpu
+        
     def __len__(self):        
         num_data = len(self.dataset)
         num_batches = np.ceil(num_data / self.batch_size)
@@ -54,3 +55,16 @@ class DataLoader:
         x, y = self.dataset[self.indices[idx0:idx1]]
         
         return x, y
+    
+    # TODO: to check if change for using GPU is needed.
+    def to_cpu(self):
+        self.gpu = False
+    
+    def to_cpu(self):
+        self.gpu = True
+    
+    def to(self, device):
+        if device == 'gpu':
+            self.to_gpu()
+        else:
+            self.to_cpu()

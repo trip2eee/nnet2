@@ -10,7 +10,7 @@ class Linear(Module):
 
         self.in_features = in_features
         self.out_features = out_features
-
+        
         w = np.random.randn(in_features, out_features).astype(dtype) * np.sqrt(1 / in_features)
         self.W = Parameter(w, name='W')
 

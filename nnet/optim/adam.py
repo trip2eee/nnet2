@@ -1,6 +1,7 @@
 from nnet.optim.optimizer import Optimizer
 import numpy as np
 import math
+import nnet.cuda
 
 class Adam(Optimizer):
     def __init__(self, lr=1e-3, betas=(0.9, 0.999), eps=1e-8):
@@ -22,10 +23,12 @@ class Adam(Optimizer):
         super().update(*args, **kwargs)
 
     def update_one(self, param):
+        xp = nnet.cuda.get_array_module(param.data)
+
         key = id(param)
         if key not in self.ms:
-            self.ms[key] = np.zeros_like(param.data)    # m_0
-            self.vs[key] = np.zeros_like(param.data)    # v_0
+            self.ms[key] = xp.zeros_like(param.data)    # m_0
+            self.vs[key] = xp.zeros_like(param.data)    # v_0
 
         m = self.ms[key]    # m_t-1
         v = self.vs[key]    # v_t-1
@@ -48,4 +51,4 @@ class Adam(Optimizer):
         hat_m = m / (1.0 - math.pow(self.beta1, self.t))
         hat_v = v / (1.0 - math.pow(self.beta2, self.t))
 
-        param.data -= self.lr * hat_m / (np.sqrt(hat_v) + eps)
+        param.data -= self.lr * hat_m / (xp.sqrt(hat_v) + eps)

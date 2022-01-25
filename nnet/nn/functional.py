@@ -1,14 +1,16 @@
-from typing_extensions import final
-
-from numpy.lib.stride_tricks import broadcast_to
 from nnet.function import Function
 from nnet.tensor import Tensor
 import numpy as np
 import nnet.utils.utils
+import nnet.cuda
+try:
+    import cupyx as cpx
+except ImportError:
+    pass
 
-def as_array(x):
+def as_array(x, array_module=np):
     if np.isscalar(x):
-        y = np.array(x)
+        y = array_module.array(x)
     else:
         y = x
     return y
@@ -39,7 +41,7 @@ class Add(Function):
         return gx0, gx1
 
 def add(x0, x1):
-    x1 = as_array(x1)
+    x1 = as_array(x1, nnet.cuda.get_array_module(x0))
     return Add()(x0, x1)
 
 class Sub(Function):
@@ -88,6 +90,7 @@ class Mul(Function):
         return gx0, gx1
 
 def mul(x0, x1):
+    x1 = as_array(x1, nnet.cuda.get_array_module(x0))
     return Mul()(x0, x1)
 
 class Div(Function):
@@ -130,11 +133,13 @@ def square(x):
 
 class Exp(Function):
     def forward(self, x):
-        return np.exp(x)
+        xp = nnet.cuda.get_array_module(x)
+        return xp.exp(x)
     
     def backward(self, gy):
+        xp = nnet.cuda.get_array_module(gy)
         x = self.inputs[0]
-        gx = np.exp(x) * gy
+        gx = xp.exp(x) * gy
         return gx
 
 def exp(x):
@@ -174,11 +179,12 @@ def pow(x, c):
 
 class Sin(Function):
     def forward(self, x):
-        y = np.sin(x)
+        xp = nnet.cuda.get_array_module(x)
+        y = xp.sin(x)
         return y
     def backward(self, gy):
         x = self.inputs[0]
-        gx = gy * np.cos(x)
+        gx = gy * cos(x)
         return gx
 
 def sin(x):
@@ -186,11 +192,12 @@ def sin(x):
 
 class Cos(Function):
     def forward(self, x):
-        y = np.cos(x)
+        xp = nnet.cuda.get_array_module(x)
+        y = xp.cos(x)
         return y
     def backward(self, gy):
         x = self.inputs[0]
-        gx = gy * -np.sin(x)
+        gx = gy * -sin(x)
         return gx
 
 def cos(x):
@@ -198,7 +205,8 @@ def cos(x):
 
 class Tanh(Function):
     def forward(self, x):
-        y = np.tanh(x)
+        xp = nnet.cuda.get_array_module(x)
+        y = xp.tanh(x)
         return y
     def backward(self, gy):
         y = self.outputs[0]()
@@ -231,7 +239,8 @@ def transpose(x):
 
 class Transpose(Function):
     def forward(self, x):
-        y = np.transpose(x)
+        xp = nnet.cuda.get_array_module(x)
+        y = xp.transpose(x)
         return y
     
     def backward(self, gy):
@@ -263,8 +272,9 @@ class BroadcastTo(Function):
         self.shape = shape
 
     def forward(self, x):
+        xp = nnet.cuda.get_array_module(x)
         self.x_shape = x.shape
-        y = np.broadcast_to(x, self.shape)
+        y = xp.broadcast_to(x, self.shape)
         return y
 
     def backward(self, gy):
@@ -344,8 +354,9 @@ def mean_squared_error(x0, x1):
 
 class Sigmoid(Function):
     def forward(self, x):
+        xp = nnet.cuda.get_array_module(x)
         # y = 1 / (1 + exp(-x))
-        y = np.tanh(x * 0.5) * 0.5 + 0.5  # Better implementation
+        y = xp.tanh(x * 0.5) * 0.5 + 0.5  # Better implementation
         return y
 
     def backward(self, gy):
@@ -359,7 +370,8 @@ def sigmoid(x):
 
 class ReLU(Function):
     def forward(self, x):
-        y = np.maximum(x, 0.0)
+        xp = nnet.cuda.get_array_module(x)
+        y = xp.maximum(x, 0.0)
         return y
 
     def backward(self, gy):
@@ -395,8 +407,14 @@ class GetItemGrad(Function):
         self.in_shape = in_shape
     
     def forward(self, gy):
-        gx = np.zeros(self.in_shape)
-        np.add.at(gx, self.slices, gy)
+        xp = nnet.cuda.get_array_module(gy)
+        gx = xp.zeros(self.in_shape, gy.dtype)
+
+        if xp is np:
+            np.add.at(gx, self.slices, gy)
+        else:
+            cpx.scatter_add(gx, self.slices, gy)
+
         return gx
     
     def backward(self, ggx):
@@ -407,8 +425,10 @@ class Softmax(Function):
         self.axis = axis
 
     def forward(self, x):
+        xp = nnet.cuda.get_array_module(x)
+
         y = x - x.max(axis=self.axis, keepdims=True)
-        y = np.exp(y)
+        y = xp.exp(y)
         y /= y.sum(axis=self.axis, keepdims=True)
         return y
 
@@ -424,21 +444,25 @@ def softmax(x, axis=1):
 
 class SoftmaxCrossEntropy(Function):
     def forward(self, x, t):
+        xp = nnet.cuda.get_array_module(x)
+
         N = x.shape[0]
         log_z = nnet.utils.utils.logsumexp(x, axis=1)
         log_p = x - log_z
-        log_p = log_p[np.arange(N), t.ravel()]
-        y = -log_p.sum() / np.float32(N)
+        log_p = log_p[xp.arange(N), t.ravel()]
+        y = -log_p.sum() / xp.float32(N)
         return y
 
     def backward(self, gy):
+        xp = nnet.cuda.get_array_module(gy)
+        
         x, t = self.inputs
         N, CLS_NUM = x.shape
 
         gy *= 1/N
         y = softmax(x)
-        # convert to one-hot
-        t_onehot = np.eye(CLS_NUM, dtype=t.dtype)[t.data]
+        # convert to one-hot        
+        t_onehot = xp.eye(CLS_NUM, dtype=t.dtype)[t.data]
         y = (y - t_onehot) * gy
         return y
 

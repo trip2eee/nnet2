@@ -42,5 +42,17 @@ class Module:
     def cleargrads(self):
         for param in self.params():
             param.cleargrad()
-            
+    
+    def to_cpu(self):
+        for param in self.params():
+            param.to_cpu()
+    
+    def to_gpu(self):
+        for param in self.params():
+            param.to_gpu()
 
+    def to(self, device):
+        if device == 'gpu':
+            self.to_gpu()
+        else:
+            self.to_cpu()
