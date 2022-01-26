@@ -383,6 +383,34 @@ class ReLU(Function):
 def relu(x):
     return ReLU()(x)
 
+class Dropout(Function):
+    """During training, randomly zeroes some of the elements of the input tensor with probability of p.
+    """
+    def __init__(self, p=0.5, training=True):
+        """p (float) probability of an element to be zeroed. default: 0.5
+        """
+        super(Dropout, self).__init__()
+        self.p = p
+        self.training = training
+    
+    def forward(self, x):
+        if self.training:
+            xp = nnet.cuda.get_array_module(x)
+            self.mask = xp.random.binomial(1, 1.0-self.p, x.shape)
+            y = x * self.mask / (1.0 - self.p)
+        else:
+            y = x
+        return y
+    
+    def backward(self, gy):
+        # y = (x * mask) / (1 - p)
+        # dy/dx = mask / (1-p)
+        gx = gy * self.mask * (1.0 - self.p)
+        return gx
+
+def dropout(x, p=0.5, training=False):
+    return Dropout(p=p, training=training)(x)
+
 class GetItem(Function):
     def __init__(self, slices):
         super(GetItem, self).__init__()

@@ -10,6 +10,7 @@ class Parameter(nnet.tensor.Tensor):
 class Module:
     def __init__(self):
         self._params = set()
+        self.train_mode = True  # training mode.
     
     def __setattr__(self, name, value):
         if isinstance(value, (Parameter, Module)):
@@ -91,4 +92,18 @@ class Module:
         for key, param in params_dict.items():
             param.data = npz[key]
     
+    def train(self, mode=True):
+        """This method sets module in training mode.
+           mode (bool) - whether to set training mode (True) or evaluation mode (False). Default: True.
+        """
+        self.train_mode = mode
+        # change train mode recursively.
+        for name in self._params:
+            obj = self.__dict__[name]
+            if isinstance(obj, Module):
+                obj.train(mode)
     
+    def eval(self):
+        """This method sets the module in evaluation mode.
+        """
+        self.train(False)
