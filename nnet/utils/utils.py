@@ -130,6 +130,18 @@ def logsumexp(x, axis=1):
     m += s
     return m
 
+
+def max_backward_shape(x, axis):
+    if axis is None:
+        axis = range(x.ndim)
+    elif isinstance(axis, int):
+        axis = (axis,)
+    else:
+        axis = axis
+
+    shape = [s if ax not in axis else 1 for ax, s in enumerate(x.shape)]
+    return shape
+    
 # =============================================================================
 # download function
 # =============================================================================
@@ -189,3 +201,16 @@ def pair(x):
         return x
     else:
         raise ValueError
+
+def get_conv_outsize(input_size, kernel_size, stride, pad):
+    """This function computes the size of convolution output.
+       input_size (int) input size
+       kernel_size (int) kernel size
+       stride (int) stride
+       pad (int) padding size.       
+    """
+    return ((input_size + (pad * 2) - kernel_size) // stride) + 1
+
+def get_deconv_outsize(input_size, kernel_size, stride, pad):
+    return stride * (input_size - 1) * kernel_size - 2 * pad
+

@@ -234,18 +234,33 @@ class Reshape(Function):
     def backward(self, gy):
         return reshape(gy, self.x_shape)
 
-def transpose(x):
-    return Transpose()(x)
+def transpose(x, axes=None):
+    return Transpose(axes)(x)
 
 class Transpose(Function):
+    def __init__(self, axes=None):
+        self.axes = axes
+
+        if self.axes is not None:
+            axes_len = len(self.axes)
+            # sort axes and returns their indices.
+            # e.g. index:value = [0:0, 1:3, 2:1, 3:2]
+            # sort with respect to value in increasing order
+            # -> [0:0, 2:1, 3:2, 1:3]
+            # return indices
+            # -> (0, 2, 3, 1)
+            self.inv_axes = tuple(np.argsort([ax % axes_len for ax in self.axes]))
+
     def forward(self, x):
-        xp = nnet.cuda.get_array_module(x)
-        y = xp.transpose(x)
+        # call transpose() method of xpy array.
+        y = x.transpose(self.axes)
         return y
     
     def backward(self, gy):
-        gx = transpose(gy)
-        return gx
+        if self.axes is None:
+            return transpose(gy)
+
+        return transpose(gy, self.inv_axes)
 
 class Sum(Function):
     def __init__(self, axis, keepdims):
@@ -382,6 +397,66 @@ class ReLU(Function):
 
 def relu(x):
     return ReLU()(x)
+
+
+# =============================================================================
+# max / min / clip
+# =============================================================================
+class Max(Function):
+    def __init__(self, axis=None, keepdims=False):
+        self.axis = axis
+        self.keepdims = keepdims
+
+    def forward(self, x):
+        y = x.max(axis=self.axis, keepdims=self.keepdims)
+        return y
+
+    def backward(self, gy):
+        x = self.inputs[0]
+        y = self.outputs[0]()  # weakref
+
+        shape = nnet.utils.utils.max_backward_shape(x, self.axis)
+        gy = reshape(gy, shape)
+        y = reshape(y, shape)
+        cond = (x.data == y.data)
+        gy = broadcast_to(gy, cond.shape)
+        return gy * cond
+
+
+class Min(Max):
+    def forward(self, x):
+        y = x.min(axis=self.axis, keepdims=self.keepdims)
+        return y
+
+
+def max(x, axis=None, keepdims=False):
+    return Max(axis, keepdims)(x)
+
+
+def min(x, axis=None, keepdims=False):
+    return Min(axis, keepdims)(x)
+
+
+class Clip(Function):
+    def __init__(self, x_min, x_max):
+        self.x_min = x_min
+        self.x_max = x_max
+
+    def forward(self, x):
+        xp = nnet.cuda.get_array_module(x)
+        y = xp.clip(x, self.x_min, self.x_max)
+        return y
+
+    def backward(self, gy):
+        x, = self.inputs
+        mask = (x.data >= self.x_min) * (x.data <= self.x_max)
+        gx = gy * mask
+        return gx
+
+
+def clip(x, x_min, x_max):
+    return Clip(x_min, x_max)(x)
+
 
 class Dropout(Function):
     """During training, randomly zeroes some of the elements of the input tensor with probability of p.

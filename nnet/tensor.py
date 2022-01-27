@@ -21,7 +21,7 @@ class Tensor:
             else:
                 raise TypeError("{} is not supported".format(type(data)))
         else:
-            raise TypeError("{} is not supported".format(type(data)))
+            self.data = None    # for None parameters e.g. bias of layers with no bias used.
 
         self.grad = None
         self.creator = None
@@ -163,8 +163,20 @@ class Tensor:
             shape = shape[0]
         return nnet.nn.functional.reshape(self, shape)
 
-    def transpose(self):
-        return nnet.nn.functional.transpose(self)
+    def transpose(self, *axes):
+        if len(axes) == 0:
+            axes = None
+        elif len(axes) == 1:
+            if isinstance(axes[0], (tuple, list)) or axes[0] is None:
+                axes = axes[0]
+        
+        return nnet.nn.functional.transpose(self, axes)
+
+    def max(self, axis=None, keepdims=False):
+        return nnet.nn.functional.max(self, axis, keepdims)
+
+    def min(self, axis=None, keepdims=False):
+        return nnet.nn.functional.min(self, axis, keepdims)
 
     @property
     def T(self):
