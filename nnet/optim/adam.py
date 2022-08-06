@@ -4,6 +4,8 @@ import math
 import nnet.cuda
 
 class Adam(Optimizer):
+    """Adaptive Moment Estimation (Adam) Optimizer
+    """
     def __init__(self, lr=1e-3, betas=(0.9, 0.999), eps=1e-8):
         """lr - learning rate (default: 1e-3)
            betas - coefficients used for computing running average of gradient and its square (default:(0.9, 0.999))

@@ -21,6 +21,8 @@ def as_tensor(obj):
     return Tensor(obj)
 
 class Add(Function):
+    """Addition
+    """
     def forward(self, x0, x1):
         """y = x0 + x1
         """
@@ -61,10 +63,14 @@ class Sub(Function):
         return gx0, gx1
 
 def sub(x0, x1):
+    """This function computes y = x0 - x1
+    """
     x1 = as_array(x1)
     return Sub()(x0, x1)
 
 def rsub(x0, x1):
+    """This function computes y = x1 - x0
+    """
     x1 = as_array(x1)
     return Sub()(x1, x0)
 
@@ -572,3 +578,4 @@ class SoftmaxCrossEntropy(Function):
 
 def softmax_cross_entropy(x, t):
     return SoftmaxCrossEntropy()(x, t)
+

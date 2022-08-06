@@ -3,6 +3,8 @@ import numpy as np
 import nnet.cuda
 
 class SGD(Optimizer):
+    """Stochastic Gradient Descent optimizer.
+    """
     def __init__(self, lr=0.01, momentum=0.0):
         super(SGD, self).__init__()
         self.lr = lr
