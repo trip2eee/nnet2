@@ -3,13 +3,14 @@ import os
 import subprocess
 import nnet.cuda
 import urllib.request
+from nnet.nn.functional.function import Function
 
 def get_dot_graph(output, verbose=True):
     txt = ''
     modules = []
     seen_set = set()
 
-    def add_module(mod: nnet.Function):
+    def add_module(mod: Function):
         if mod not in seen_set:
             modules.append(mod)
             # modules.sort(key=lambda x : x.generation)
@@ -56,7 +57,7 @@ def _dot_tensor(t: nnet.Tensor, verbose=False):
         name += str(t.shape) + ' ' + str(t.dtype)
     return dot_var.format(id(t), name)
 
-def _dot_module(mod: nnet.Function):
+def _dot_module(mod: Function):
     dot_func = '{} [label="{}", color=lightblue, style=filled, shape=box]\n'
     txt = dot_func.format(id(mod), mod.__class__.__name__)
 

@@ -1,4 +1,4 @@
-from nnet.function import Function
+from nnet.nn.functional.function import Function
 from nnet.tensor import Tensor
 import numpy as np
 import nnet.utils.utils

@@ -1,4 +1,4 @@
-from nnet.function import Function
+from nnet.nn.functional.function import Function
 import nnet.cuda as cuda
 import numpy as np
 from nnet.utils.utils import pair, get_conv_outsize

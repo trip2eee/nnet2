@@ -1,7 +1,5 @@
 # NNet 2.0
-Neural network library NNet 2.0
-
-A simple neural network library mimicking pytorch interface.
+NNet 2.0 - A simple neural network library mimicking pytorch interface.
 
 ## Example Codes
 ### Linear Regression

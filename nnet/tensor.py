@@ -198,5 +198,9 @@ class Tensor:
             self.to_gpu()
         else:
             self.to_cpu()
-
+    
+    def numpy(self):
+        """This method returns the numpy ndarray of the self tensor.
+        """
+        return self.data
 

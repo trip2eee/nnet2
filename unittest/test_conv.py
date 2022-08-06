@@ -9,9 +9,6 @@ import nnet
 import nnet.nn.functional as F
 import nnet.utils.utils as utils
 
-
-
-
 class ConvTest(unittest.TestCase):
     def test_im2col(self):
         # batch, channel, height, width
