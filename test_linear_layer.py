@@ -1,10 +1,10 @@
 import numpy as np
+import matplotlib.pyplot as plt
+
 import nnet
 import nnet.nn
 import nnet.nn.functional
 import nnet.optim
-import matplotlib.pyplot as plt
-
 
 np.random.seed(0)
 x = np.random.rand(100, 1).astype(np.float32)
@@ -40,8 +40,6 @@ class MLPNet(nnet.nn.Module):
 
 model = MLPNet((10, 1))
 
-# model.plot(x)
-
 lr = 0.2
 optimizer = nnet.optim.SGD(lr=lr, momentum=0.9)
 optimizer.setup(model)
@@ -61,6 +59,7 @@ for i in range(iters):
 plt.figure('sin')
 plt.scatter(x, y)
 plt.plot(x, y_pred.data, c='r')
+plt.savefig('images/linear_reg.png')
 plt.show()
 
 

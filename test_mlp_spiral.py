@@ -1,14 +1,11 @@
-from cgi import test
 import numpy as np
 import matplotlib.pyplot as plt
 import nnet
 from nnet import optim
 from nnet.optim import SGD
 from nnet.utils.data import Spiral
-from nnet.utils.data import MNIST
 from nnet.utils.data import DataLoader
 import nnet.nn.functional as F
-import math
 
 class MLPNet(nnet.nn.Module):
     def __init__(self, dim_input, fc_output_sizes):
@@ -92,20 +89,23 @@ acc = accuracy(y, y_pred)
 print("Accuracy: {}".format(acc))
 
 
+x = x.numpy()
+y = y.numpy()
 x_min, x_max = x[:, 0].min() - 0.1, x[:, 0].max() + 0.1
 y_min, y_max = x[:, 1].min() - 0.1, x[:, 1].max() + 0.1
+
 h = 0.001
 xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
 X = np.c_[xx.ravel(), yy.ravel()]
 
 with nnet.no_grad():
     y_pred = model(X)
+y_pred = y_pred.numpy()
 
 plt.figure('spiral')
-y_pred = np.argmax(y_pred.data, axis=-1)
+y_pred = np.argmax(y_pred, axis=-1)
 Z = y_pred.reshape(xx.shape)
-plt.contourf(xx, yy, Z)
-
+plt.contourf(xx, yy, Z, levels=3, colors=['#FFE1E9', '#97C1A9', '#9AB7D3', '#9AB7D3'])
 marker = []
 for yi in y:
     if yi == 0:
@@ -116,6 +116,6 @@ for yi in y:
         marker.append('b')
 
 plt.scatter(x[:,0], x[:,1], c=marker)
-
+plt.savefig('images/spiral.png')
 plt.show()
 
