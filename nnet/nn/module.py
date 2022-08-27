@@ -13,6 +13,8 @@ class Module:
         self.train_mode = True  # training mode.
     
     def __setattr__(self, name, value):
+        """This method handles new attributes (member variables).
+        """
         if isinstance(value, (Parameter, Module)):
             self._params.add(name)
         elif isinstance(value, (list)):

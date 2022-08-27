@@ -1,15 +1,19 @@
+"""
+@file  test_mlp_spiral.py
+@brief Test of sprial dataset using multiple layer perceptron.
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import nnet
-from nnet import optim
 from nnet.optim import SGD
 from nnet.utils.data import Spiral
 from nnet.utils.data import DataLoader
 import nnet.nn.functional as F
 
-class MLPNet(nnet.nn.Module):
+class MLPSpiralNet(nnet.nn.Module):
     def __init__(self, dim_input, fc_output_sizes):
-        super(MLPNet, self).__init__()
+        super(MLPSpiralNet, self).__init__()
 
         layers = []
         for dim_output in fc_output_sizes[:-1]:
@@ -22,6 +26,7 @@ class MLPNet(nnet.nn.Module):
         layer = nnet.nn.Linear(dim_input, fc_output_sizes[-1])
         layers.append(layer)
 
+        # lists shall be assigned after all the layers are appended to the list.
         self.layers = layers
 
     def forward(self, x):
@@ -54,7 +59,7 @@ spiral_test = Spiral(train=False)
 
 max_epochs = 300
 
-model = MLPNet(2, (30, 3))
+model = MLPSpiralNet(2, (30, 3))
 optimizer = SGD(lr=1.0)
 optimizer.setup(model)
 

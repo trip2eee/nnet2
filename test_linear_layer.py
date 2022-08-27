@@ -1,3 +1,8 @@
+"""
+@file  test_linear_layer.py
+@brief Test of linear regression using multiple layer perceptron.
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -11,20 +16,20 @@ x = np.random.rand(100, 1).astype(np.float32)
 x.sort(axis=0)
 y = np.sin(2 * np.pi * x) + np.random.rand(100, 1).astype(np.float32)
 
-class MLPNet(nnet.nn.Module):
+class RegressionNet(nnet.nn.Module):
     def __init__(self, fc_output_sizes):
-        super(MLPNet, self).__init__()
+        super(RegressionNet, self).__init__()
 
-        self.layers = []
+        layers = []
 
         dim_input = 1
-        for i, dim_output in enumerate(fc_output_sizes):
+        for dim_output in fc_output_sizes:
             layer = nnet.nn.Linear(dim_input, dim_output)
             dim_input = dim_output
+            layers.append(layer)
 
-            setattr(self, 'l' + str(i), layer)
-            self.layers.append(layer)
-
+        # lists shall be assigned after all the layers are appended to the list.
+        self.layers = layers
         
     def forward(self, x):
         y = x
@@ -38,7 +43,7 @@ class MLPNet(nnet.nn.Module):
         y = self.forward(*inputs)
         return nnet.utils.plot_dot_graph(y, verbose=True, to_file=to_file)
 
-model = MLPNet((10, 1))
+model = RegressionNet((10, 1))
 
 lr = 0.2
 optimizer = nnet.optim.SGD(lr=lr, momentum=0.9)

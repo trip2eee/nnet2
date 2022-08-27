@@ -1,3 +1,8 @@
+"""
+@file  test_mnist_cnn.py
+@brief Test of MNIST dataset using convolutional neural network.
+"""
+
 import nnet
 import nnet.nn
 import nnet.utils.data
@@ -6,7 +11,6 @@ import matplotlib.pyplot as plt
 import nnet.nn.functional as F
 import numpy as np
 import time
-import cProfile
 
 np.random.seed(123)
 
@@ -20,9 +24,9 @@ train_loader = nnet.utils.data.DataLoader(train_set, batch_size, shuffle=True)
 test_loader = nnet.utils.data.DataLoader(test_set, batch_size, shuffle=True)
 
 
-class MLPNet(nnet.nn.Module):
+class MNISTNet(nnet.nn.Module):
     def __init__(self):
-        super(MLPNet, self).__init__()
+        super(MNISTNet, self).__init__()
 
         layers = []
         # 28x28
@@ -55,6 +59,8 @@ class MLPNet(nnet.nn.Module):
         
         # outptu layer - no activation.
         layer = nnet.nn.Linear(dim_input, fc_output_sizes[-1])
+
+        # lists shall be assigned after all the layers are appended to the list.
         layers.append(layer)
 
         self.layers = layers
@@ -83,7 +89,7 @@ def accuracy(y, y_pred):
 device = 'gpu'
 # device = 'cpu'
 
-model = MLPNet()
+model = MNISTNet()
 model.to(device)
 
 optimizer = nnet.optim.Adam(lr=0.001)
